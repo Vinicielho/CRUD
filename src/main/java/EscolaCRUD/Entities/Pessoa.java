@@ -15,8 +15,7 @@ import java.util.UUID;
 @Setter
 public class Pessoa implements Serializable{
 
-    @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @Id @GeneratedValue(strategy= GenerationType.AUTO)
     private UUID id;
 
     @Column(nullable = false)

@@ -1,6 +1,6 @@
 package EscolaCRUD.Controllers;
 
-import EscolaCRUD.DataAcessObjects.PessoaDTO;
+import EscolaCRUD.DataTransferObjects.PessoaDTO;
 import EscolaCRUD.Entities.Pessoa;
 import EscolaCRUD.Services.PessoaService;
 
@@ -25,9 +25,10 @@ public class PessoaController {
     public PessoaController(PessoaService pessoaService) {
 
         this.pessoaService = pessoaService;
+
     }
 
-    @PostMapping
+    @PostMapping("/savePessoa")
     public ResponseEntity<Object> savePessoa(@RequestBody @Valid PessoaDTO pessoaDto){
 
         if(pessoaService.existsByCpf(pessoaDto.getCpf())) {
@@ -37,10 +38,20 @@ public class PessoaController {
         var pessoa = new Pessoa();
         BeanUtils.copyProperties(pessoaDto, pessoa);
         pessoa.setRegistrationDate(LocalDateTime.now(ZoneId.of("UTC")));
-        return ResponseEntity.status(HttpStatus.CREATED).body(PessoaService.save(pessoa));
+        return ResponseEntity.status(HttpStatus.CREATED).body(pessoaService.save(pessoa));
     }
 
-    @GetMapping
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> deletePessoa(@PathVariable(value = "id") UUID id){
+        Optional<Pessoa> pessoaOptional = pessoaService.findById(id);
+        if (pessoaOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pessoa não encontrada.");
+        }
+        pessoaService.delete(pessoaOptional.get());//".get()"?
+        return ResponseEntity.status(HttpStatus.OK).body("Pessoa deletada.");
+    }
+
+    @GetMapping("/getAllPessoas")
     public ResponseEntity<List<Pessoa>> getAllPessoas(){
         return ResponseEntity.status(HttpStatus.OK).body(pessoaService.findAll());
     }
@@ -48,27 +59,14 @@ public class PessoaController {
     @GetMapping("/{id}")
     public ResponseEntity<Object> getOnePessoa(@PathVariable(value="id") UUID id){
         Optional<Pessoa> pessoaOptional=pessoaService.findById(id);
-        if (!pessoaOptional.isPresent()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pessoa não encontrada");
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(pessoaOptional.get());
+        return pessoaOptional.<ResponseEntity<Object>>map(pessoa -> ResponseEntity.status(HttpStatus.OK).body(pessoa)).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pessoa não encontrada"));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteParkingSpot(@PathVariable(value = "id") UUID id){
-        Optional<Pessoa> pessoaOptional = pessoaService.findById(id);
-        if (!pessoaOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Parking Spot not found.");
-        }
-        pessoaService.delete(pessoaOptional.get());
-        return ResponseEntity.status(HttpStatus.OK).body("Parking Spot deleted successfully.");
-    }
     @PutMapping("/{id}")
-    public ResponseEntity<Object> updatePessoa(@PathVariable(value = "id") UUID id,
-                                               @RequestBody @Valid PessoaDTO pessoaDto){
+    public ResponseEntity<Object> updatePessoa(@PathVariable(value = "id") UUID id, @RequestBody @Valid PessoaDTO pessoaDto){
         Optional<Pessoa> pessoaOptional = pessoaService.findById(id);
-        if (!pessoaOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Parking Spot not found.");
+        if (pessoaOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pessoa não encontrada.");
         }
         var pessoa = new Pessoa();
         BeanUtils.copyProperties(pessoaDto, pessoa);

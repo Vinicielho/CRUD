@@ -13,15 +13,18 @@ import java.util.UUID;
 @Service
 public class PessoaService {
 
-    static PessoaRepository pessoaRepository;
+    final PessoaRepository pessoaRepository;
 
     public PessoaService(PessoaRepository pessoaRepository){
         this.pessoaRepository=pessoaRepository;
     }
 
     @Transactional
-    public static Pessoa save(Pessoa pessoa){
-        return pessoaRepository.save(pessoa);
+    public Pessoa save(Pessoa pessoa) {return pessoaRepository.save(pessoa);}
+
+    @Transactional
+    public void delete(Pessoa pessoa) {
+        pessoaRepository.delete(pessoa);
     }
 
     public boolean existsByCpf(String cpf){
@@ -42,10 +45,5 @@ public class PessoaService {
 
     public Optional<Pessoa> findById(UUID id){
         return pessoaRepository.findById(id);
-    }
-
-    @Transactional
-    public void delete(Pessoa pessoa) {
-        pessoaRepository.delete(pessoa);
     }
 }
